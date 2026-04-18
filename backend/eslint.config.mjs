@@ -1,13 +1,14 @@
 // @ts-check
 
 import js from "@eslint/js"
-import { defineConfig } from "eslint/config"
-import globals from "globals";
+import { defineConfig, globalIgnores } from "eslint/config"
+import globals from "globals"
 
 import tseslint from "typescript-eslint"
 import stylistic from "@stylistic/eslint-plugin"
 
 export default defineConfig(
+  globalIgnores(["dist/**", "node_modules/**"]),
   js.configs.recommended,
   tseslint.configs.recommended,
   stylistic.configs.customize({
@@ -26,16 +27,10 @@ export default defineConfig(
   },
   {
     name: "@colens/globals",
-		languageOptions: {
-			globals: {
-				...globals.node,
-			},
-		},
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
   },
-  {
-    ignores: [
-      "dist/**",
-      "node_modules/**",
-    ]
-  }
 )

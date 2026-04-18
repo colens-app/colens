@@ -1,5 +1,4 @@
 import { defineConfig } from "tsdown"
-import { spawn } from "node:child_process"
 
 export default defineConfig(options => ({
   entry: ["./src/index.ts"],
