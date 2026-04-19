@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+model Workspaces {
+  id   String @id @default(uuid())
+  name String
+
+  agents          Agents[]
+  workspaceTokens WorkspaceTokens[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceTokens {
+  id        String @id @default(uuid())
+  tokenHash String @map("token_hash")
+
+  workspaceId String     @map("workspace_id")
+  workspace   Workspaces @relation(fields: [workspaceId], references: [id])
+
+  @@map("workspace_tokens")
+}
+
+model Agents {
+  id        String @id @default(uuid())
+  name      String
+  tokenHash String @map("taken_hash")
+
+  workspaceId String     @map("workspace_id")
+  workspace   Workspaces @relation(fields: [workspaceId], references: [id])
+
+  packages AgentPackages[]
+  sources  AgentSources[]
+
+  @@map("agents")
+}
+
+model AgentPackages {
+  id String @id @default(uuid())
+
+  name    String
+  version String
+  arch    String // and64 vs arm64, etc...
+
+  agentId String @map("agent_id")
+  agent   Agents @relation(fields: [agentId], references: [id])
+
+  @@unique([name, arch, agentId])
+  @@map("agent_packages")
+}
+
+model AgentSources {
+  id String @id @default(uuid())
+
+  source String
+  cert   String?
+
+  agentId String @map("agent_id")
+  agent   Agents @relation(fields: [agentId], references: [id])
+
+  @@map("agent_sources")
+}
+
+datasource db {
+  provider = "postgresql"
+}

@@ -10,17 +10,21 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
-    "hono": "^4.12.14"
+    "better-auth": "^1.6.5",
+    "hono": "^4.12.14",
+    "prisma": "^7.7.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/node": "^25.6.0",
     "concurrently": "^9.2.1",
+    "dotenv": "^17.4.2",
     "eslint": "^10.2.1",
     "globals": "^17.5.0",
     "nodemon": "^3.1.14",
     "tsdown": "^0.21.9",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.58.2"
   }
