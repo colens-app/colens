@@ -166,3 +166,17 @@ describe("parseStanza - realistic multiline release file", () => {
     })
   })
 })
+
+describe("parseStanza - continuation line errors", () => {
+  test("throws on continuation line before any key", () => {
+    expect(() => parseStanza(" continuation before key", true)).toThrow()
+  })
+
+  test("throws on continuation line on unregistered field", () => {
+    expect(() => parseStanza("Package: foo\n continuation", true)).toThrow()
+  })
+})
+
+test("throws on invalid line", () => {
+  expect(() => parseStanza("not a valid line", true)).toThrow()
+})

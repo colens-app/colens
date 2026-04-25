@@ -7,6 +7,7 @@ const fieldTypes: Record<string, "multiline" | "folded"> = {
   buildDepends: "folded",
   depends: "folded",
 
+  description: "multiline",
   md5Sum: "multiline",
   sha1: "multiline",
   sha256: "multiline",
@@ -48,8 +49,7 @@ export function parseStanza(stanza: string, singleStanza: boolean = false): Reco
     const continuationLineMatch = /^[\t ](.+)/.exec(line)
     if (continuationLineMatch) {
       if (!currentKey || !fieldTypes[currentKey]) {
-        console.error(`Continuation line on unregistered or unknown field (currentKey: ${currentKey}):`, line)
-        continue
+        throw new Error(`Continuation line on unregistered or unknown field (currentKey: ${currentKey}): ${line}`)
       }
       const value = continuationLineMatch[1]
 
@@ -66,7 +66,7 @@ export function parseStanza(stanza: string, singleStanza: boolean = false): Reco
       }
     }
 
-    console.error("Invalid line", line)
+    throw new Error(`Invalid line: ${line}`)
   }
 
   // Push the last stanza if it's not empty
