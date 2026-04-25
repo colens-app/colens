@@ -1,15 +1,5 @@
 import { z } from "zod"
-
-function getChecksumRegex(length: number): RegExp {
-  return new RegExp(`^[a-fA-F0-9]{${length}}\\s+\\d+\\s+.+$`, "m")
-}
-
-function transformChecksumString(s: string) {
-  return s.split("\n").map((line) => {
-    const [checksum, size, path] = line.trim().split(/\s+/)
-    return { checksum, size: parseInt(size, 10), path }
-  })
-}
+import { getChecksumRegex, transformChecksumString } from "./checksums.js"
 
 // Format described in https://wiki.debian.org/DebianRepository/Format#A.22Release.22_files
 export const releaseFileSchema = z.object({
