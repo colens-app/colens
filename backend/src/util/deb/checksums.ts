@@ -1,5 +1,5 @@
 export function getChecksumRegex(length: number): RegExp {
-  const checksumLine = `[a-fA-F0-9]{${length}} \\d+ \\S+`
+  const checksumLine = `[a-fA-F0-9]{${length}}\\s+\\d+\\s+\\S+`
   return new RegExp(`^${checksumLine}(\\n${checksumLine})*$`)
 }
 
