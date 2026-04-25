@@ -24,11 +24,11 @@ export const releaseFileSchema = z.object({
   version: z.string().min(1).nullish(),
 
   // Content Information
-  components: z.string().min(1).nonempty().transform(s => s.split(" ")),
-  architectures: z.string().min(1).nonempty().transform(s => s.split(" ")),
+  components: z.string().min(1).nonempty().transform(s => s.trim().split(/\s+/)),
+  architectures: z.string().min(1).nonempty().transform(s => s.trim().split(/\s+/)),
 
   date: z.coerce.date(),
-  validUntil: z.date().nullish(),
+  validUntil: z.coerce.date().nullish(),
 
   // Checksums
   md5Sum: z.string().regex(getChecksumRegex(32)).transform(transformChecksumString).nullish(),
