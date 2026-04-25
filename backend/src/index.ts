@@ -1,6 +1,6 @@
+import { fetchReleaseFile } from "@/util/deb/fetching"
 import { serve } from "@hono/node-server"
 import { Hono } from "hono"
-import { fetchReleaseFile } from "./util/deb/fetching.js"
 
 const app = new Hono()
 

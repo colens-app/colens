@@ -1,5 +1,5 @@
+import { getChecksumRegex, transformChecksumString } from "@/util/deb/checksums"
 import { z } from "zod"
-import { getChecksumRegex, transformChecksumString } from "./checksums.js"
 
 // Format described in https://wiki.debian.org/DebianRepository/Format#A.22Release.22_files
 export const releaseFileSchema = z.object({

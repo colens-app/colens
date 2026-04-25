@@ -1,5 +1,5 @@
+import { getChecksumRegex, transformChecksumString } from "@/util/deb/checksums"
 import { describe, expect, test } from "vitest"
-import { getChecksumRegex, transformChecksumString } from "./checksums.js"
 
 describe("getChecksumRegex", () => {
   test("matches a single valid line", () => {

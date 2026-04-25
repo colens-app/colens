@@ -1,5 +1,5 @@
 import { expect, test, describe } from "vitest"
-import { parseStanza } from "./parsing.js"
+import { parseStanza } from "@/util/deb/parsing.js"
 
 describe("parseStanza - single stanza mode", () => {
   test("single key-value pair", () => {

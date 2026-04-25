@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { toCamelCase } from "./strings.js"
+import { toCamelCase } from "@/util/strings.js"
 
 describe("toCamelCase", () => {
   test("handles normal cases", () => {

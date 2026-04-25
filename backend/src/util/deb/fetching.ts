@@ -1,6 +1,6 @@
-import { stripTrailingSlash } from "../urls.js"
-import { parseStanza } from "./parsing.js"
+import { stripTrailingSlash } from "@/util/urls.js"
 import { releaseFileSchema, type ReleaseFile } from "./schemas.js"
+import { parseStanza } from "@/util/deb/parsing.js"
 
 export async function fetchReleaseFile(repositoryUrl: string, distribution: string): Promise<ReleaseFile> {
   const normalisedUrl = stripTrailingSlash(repositoryUrl)

@@ -1,4 +1,4 @@
-import { toCamelCase } from "../strings.js"
+import { toCamelCase } from "@/util/strings"
 
 // folded vs multiline can't be inferred from context, so we have to define it
 const fieldTypes: Record<string, "multiline" | "folded"> = {
