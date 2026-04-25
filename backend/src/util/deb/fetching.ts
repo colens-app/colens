@@ -4,7 +4,9 @@ import { releaseFileSchema, type ReleaseFile } from "./schemas.js"
 
 export async function fetchReleaseFile(repositoryUrl: string, distribution: string): Promise<ReleaseFile> {
   const normalisedUrl = stripTrailingSlash(repositoryUrl)
-  const indexUrl = `${normalisedUrl}/dists/${distribution}/Release` // TODO: handle gpg, maybe use InRelease instead of Release?
+  // TODO: handle gpg, maybe use InRelease instead of Release?
+  // TODO: validate distribution to not be a path traversal - either upstream or here
+  const indexUrl = `${normalisedUrl}/dists/${distribution}/Release`
   const response = await fetch(indexUrl)
   if (!response.ok) {
     throw new Error(`Failed to fetch repository index: ${response.status} ${response.statusText}`)
