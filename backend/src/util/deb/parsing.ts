@@ -6,6 +6,7 @@ const fieldTypes: Record<string, "multiline" | "folded"> = {
   binary: "folded",
   buildDepends: "folded",
   depends: "folded",
+  tag: "folded",
 
   description: "multiline",
   md5Sum: "multiline",

@@ -30,3 +30,60 @@ export const releaseFileSchema = z.object({
 })
 
 export type ReleaseFile = z.infer<typeof releaseFileSchema>
+
+export const packageSchema = z.object({
+  // Identity
+  package: z.string(),
+  source: z.string().optional(),
+  version: z.string(),
+  architecture: z.string(),
+
+  // Classification
+  priority: z.enum(["required", "important", "standard", "optional", "extra"]).optional(),
+  section: z.string().optional(),
+  tag: z.string().optional(),
+
+  // Installation
+  installedSize: z.coerce.number().optional(),
+  filename: z.string(),
+  size: z.coerce.number(),
+  phasedUpdatePercentage: z.coerce.number().min(0).max(100).optional(),
+
+  // Checksums
+  md5sum: z.string().regex(/^[a-f0-9]{32}$/).optional(),
+  sha1: z.string().regex(/^[a-f0-9]{40}$/).optional(),
+  sha256: z.string().regex(/^[a-f0-9]{64}$/).optional(),
+  sha512: z.string().regex(/^[a-f0-9]{128}$/).optional(),
+
+  // Dependencies
+  preDepends: z.string().optional(),
+  depends: z.string().optional(),
+  recommends: z.string().optional(),
+  suggests: z.string().optional(),
+  enhances: z.string().optional(),
+  breaks: z.string().optional(),
+  conflicts: z.string().optional(),
+  replaces: z.string().optional(),
+  provides: z.string().optional(),
+
+  // Maintainer
+  maintainer: z.string().optional(),
+  originalMaintainer: z.string().optional(),
+  origin: z.string().optional(),
+  bugs: z.string().url().optional(),
+
+  // Multi-arch
+  multiArch: z.enum(["same", "foreign", "allowed", "no"]).optional(),
+
+  // Description
+  description: z.string().optional(),
+  descriptionMd5: z.string().length(32).optional(),
+  homepage: z.string().url().optional(),
+
+  // Ubuntu extensions
+  task: z.string().optional(),
+  commands: z.string().optional(),
+})
+
+export type Package = z.infer<typeof packageSchema>
+export type PackagesFile = Package[]
