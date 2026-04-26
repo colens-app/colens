@@ -36,11 +36,10 @@ export function parseStanza(stanza: string, singleStanza: boolean = false): Reco
       continue
     }
 
-    const keyValueMatch = /^([!-9,;-~]+):\s*(.*?)\s*$/.exec(line)
-    if (keyValueMatch) {
-      const key = keyValueMatch[1]
-      const value = keyValueMatch[2]
-
+    const colonIndex = line.indexOf(":")
+    if (colonIndex !== -1) {
+      const key = line.slice(0, colonIndex)
+      const value = line.slice(colonIndex + 1).trim()
       const normalisedKey = toCamelCase(key)
       currentStanza[normalisedKey] = value === "" ? null : value
       currentKey = normalisedKey
