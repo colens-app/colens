@@ -18,50 +18,55 @@ const fieldTypes: Record<string, "multiline" | "folded"> = {
 export function parseStanza(stanza: string, singleStanza?: false): Record<string, string | null>[]
 export function parseStanza(stanza: string, singleStanza: true): Record<string, string | null> | null
 export function parseStanza(stanza: string, singleStanza: boolean = false): Record<string, string | null>[] | Record<string, string | null> | null {
+  const stanzas = stanza.split("\n\n")
   const results: Record<string, string | null>[] = []
+
+  for (const stanzaBlock of stanzas) {
+    if (stanzaBlock.trim().length === 0) continue
+
+    const parsed = parseSingleStanza(stanzaBlock)
+    if (parsed !== null) results.push(parsed)
+  }
+
+  return singleStanza ? results[0] ?? null : results
+}
+
+function parseSingleStanza(stanza: string): Record<string, string | null> | null {
+  const result: Record<string, string | null> = {}
   const lines = stanza.split("\n")
-
-  let currentStanza: Record<string, string | null> = {}
-
   let currentKey: string | null = null
+  let hasContent = false
 
   for (const line of lines) {
-    if (line.startsWith("#")) continue // Comment
+    if (line.charCodeAt(0) === 35) continue // '#' comment
 
-    if (line === "") { // Stanza split line
-      if (Object.keys(currentStanza).length === 0) continue // Don't do anything if we haven't started a stanza yet
-      results.push({ ...currentStanza })
-      currentStanza = {}
-      currentKey = null
-      continue
-    }
+    if (line.length === 0) continue // blank lines within a stanza block are ignored
 
     const colonIndex = line.indexOf(":")
     if (colonIndex !== -1) {
       const key = line.slice(0, colonIndex)
       const value = line.slice(colonIndex + 1).trim()
       const normalisedKey = toCamelCase(key)
-      currentStanza[normalisedKey] = value === "" ? null : value
+      result[normalisedKey] = value === "" ? null : value
       currentKey = normalisedKey
+      hasContent = true
       continue
     }
 
-    const continuationLineMatch = /^[\t ](.+)/.exec(line)
-    if (continuationLineMatch) {
+    const firstChar = line.charCodeAt(0)
+    if (firstChar === 9 || firstChar === 32) { // tab or space
       if (!currentKey || !fieldTypes[currentKey]) {
         throw new Error(`Continuation line on unregistered or unknown field (currentKey: ${currentKey}): ${line}`)
       }
-      const value = continuationLineMatch[1]
+      const value = line.slice(1)
 
       if (fieldTypes[currentKey] === "multiline") {
-        const finalValue = value === "." ? "" : value // A single dot signifies a blank line
-
-        // If the current key's value is null/empty - then the value is used as the first line, otherwise it's a new line to the value
-        currentStanza[currentKey] = currentStanza[currentKey] ? `${currentStanza[currentKey]}\n${finalValue}` : finalValue
+        const finalValue = value === "." ? "" : value
+        result[currentKey] = result[currentKey] ? `${result[currentKey]}\n${finalValue}` : finalValue
         continue
       } else if (fieldTypes[currentKey] === "folded") {
         const trimmedValue = value.trim()
-        currentStanza[currentKey] = currentStanza[currentKey] ? `${currentStanza[currentKey]} ${trimmedValue}` : trimmedValue
+        result[currentKey] = result[currentKey] ? `${result[currentKey]} ${trimmedValue}` : trimmedValue
         continue
       }
     }
@@ -69,8 +74,5 @@ export function parseStanza(stanza: string, singleStanza: boolean = false): Reco
     throw new Error(`Invalid line: ${line}`)
   }
 
-  // Push the last stanza if it's not empty
-  if (Object.keys(currentStanza).length > 0) results.push(currentStanza)
-
-  return singleStanza ? results[0] ?? null : results
+  return hasContent ? result : null
 }
