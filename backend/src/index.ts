@@ -24,10 +24,8 @@ app.get("/", async (c) => {
 
   log += `Total packages: ${almightyPackageList.length}\n`
 
-  console.log("Finding openssl packages...")
-  const opensslPackages = almightyPackageList.filter(pkg => pkg.package === "openssl")
-  log += `Found ${opensslPackages.length} openssl packages:\n`
-  for (const pkg of opensslPackages) {
+  log += "Finding package versions...\n"
+  for (const pkg of almightyPackageList) {
     log += ` - ${pkg.package} ${pkg.version} (${pkg.architecture})\n`
   }
 
