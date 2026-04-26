@@ -28,10 +28,16 @@ export function parseStanza(stanza: string, singleStanza: boolean = false): Reco
     if (parsed !== null) results.push(parsed)
   }
 
+  if (singleStanza && results.length > 1) {
+    throw new Error(`Expected single stanza but found ${results.length}`)
+  }
+
   return singleStanza ? results[0] ?? null : results
 }
 
-function parseSingleStanza(stanza: string): Record<string, string | null> | null {
+export function parseSingleStanza(stanza: string): Record<string, string | null> | null {
+  if (stanza.trim().length === 0) return null
+
   const result: Record<string, string | null> = {}
   const lines = stanza.split("\n")
   let currentKey: string | null = null
