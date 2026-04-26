@@ -6,8 +6,11 @@ describe("parseSingleStanza", () => {
     expect(parseSingleStanza("Package: Hello")).toEqual({ package: "Hello" })
   })
 
-  test("returns null for empty/whitespace input", () => {
+  test("returns null for empty input", () => {
     expect(parseSingleStanza("")).toBeNull()
+  })
+
+  test("returns null for whitespace-only input", () => {
     expect(parseSingleStanza("   ")).toBeNull()
   })
 
@@ -27,11 +30,8 @@ describe("parseSingleStanza", () => {
     expect(parseSingleStanza("Valid-Until: tomorrow")).toEqual({ validUntil: "tomorrow" })
   })
 
-  test("blank lines within block are ignored", () => {
-    expect(parseSingleStanza("Package: foo\n\nVersion: 1.0")).toEqual({
-      package: "foo",
-      version: "1.0",
-    })
+  test("throws on blank line within stanza", () => {
+    expect(() => parseSingleStanza("Package: foo\n\nVersion: 1.0")).toThrow("Unexpected blank line within stanza")
   })
 
   test("throws on continuation line before any key", () => {
@@ -161,8 +161,24 @@ describe("parseStanza - single stanza mode", () => {
     expect(parseStanza("Package:   Hello   ", true)).toEqual({ package: "Hello" })
   })
 
-  test("trailing blank line does not affect result", () => {
+  test("trailing newline does not affect result", () => {
     expect(parseStanza("Package: foo\n", true)).toEqual({ package: "foo" })
+  })
+
+  test("leading newline does not affect result", () => {
+    expect(parseStanza("\nPackage: foo", true)).toEqual({ package: "foo" })
+  })
+
+  test("throws when multiple stanzas present", () => {
+    expect(() => parseStanza("Package: foo\n\nPackage: bar", true)).toThrow(
+      "Expected single stanza but found 2",
+    )
+  })
+
+  test("throws with correct count for three stanzas", () => {
+    expect(() => parseStanza("Package: foo\n\nPackage: bar\n\nPackage: baz", true)).toThrow(
+      "Expected single stanza but found 3",
+    )
   })
 })
 
@@ -196,19 +212,5 @@ describe("parseStanza - multi stanza mode", () => {
 
   test("multiple trailing blank lines don't produce extra stanzas", () => {
     expect(parseStanza("Package: foo\n\n\n")).toEqual([{ package: "foo" }])
-  })
-})
-
-describe("parseStanza - single stanza mode errors", () => {
-  test("throws when multiple stanzas present in single stanza mode", () => {
-    expect(() => parseStanza("Package: foo\n\nPackage: bar", true)).toThrow(
-      "Expected single stanza but found 2",
-    )
-  })
-
-  test("throws with correct count for three stanzas", () => {
-    expect(() => parseStanza("Package: foo\n\nPackage: bar\n\nPackage: baz", true)).toThrow(
-      "Expected single stanza but found 3",
-    )
   })
 })

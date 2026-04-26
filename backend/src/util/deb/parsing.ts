@@ -18,7 +18,10 @@ const fieldTypes: Record<string, "multiline" | "folded"> = {
 export function parseStanza(stanza: string, singleStanza?: false): Record<string, string | null>[]
 export function parseStanza(stanza: string, singleStanza: true): Record<string, string | null> | null
 export function parseStanza(stanza: string, singleStanza: boolean = false): Record<string, string | null>[] | Record<string, string | null> | null {
-  const stanzas = stanza.split("\n\n")
+  let trimmedStanza = stanza.startsWith("\n") ? stanza.slice(1) : stanza
+  trimmedStanza = trimmedStanza.endsWith("\n") ? trimmedStanza.slice(0, -1) : trimmedStanza
+
+  const stanzas = trimmedStanza.split("\n\n")
   const results: Record<string, string | null>[] = []
 
   for (const stanzaBlock of stanzas) {
@@ -46,7 +49,7 @@ export function parseSingleStanza(stanza: string): Record<string, string | null>
   for (const line of lines) {
     if (line.charCodeAt(0) === 35) continue // '#' comment
 
-    if (line.length === 0) continue // blank lines within a stanza block are ignored
+    if (line.length === 0) throw new Error("Unexpected blank line within stanza")
 
     const colonIndex = line.indexOf(":")
     if (colonIndex !== -1) {
@@ -60,14 +63,15 @@ export function parseSingleStanza(stanza: string): Record<string, string | null>
     }
 
     const firstChar = line.charCodeAt(0)
-    if (firstChar === 9 || firstChar === 32) { // tab or space
+    if (firstChar === 9 || firstChar === 32) { // tab or space - this is a continuation line
+      // We must know the field type to know how to handle the continuation - we can't tell folded/multiline apart otherwise
       if (!currentKey || !fieldTypes[currentKey]) {
         throw new Error(`Continuation line on unregistered or unknown field (currentKey: ${currentKey}): ${line}`)
       }
       const value = line.slice(1)
 
       if (fieldTypes[currentKey] === "multiline") {
-        const finalValue = value === "." ? "" : value
+        const finalValue = value === "." ? "" : value // a single dot on a continuation line represents an empty line
         result[currentKey] = result[currentKey] ? `${result[currentKey]}\n${finalValue}` : finalValue
         continue
       } else if (fieldTypes[currentKey] === "folded") {
