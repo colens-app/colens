@@ -1,4 +1,5 @@
 import { toCamelCaseKnown } from "@/util/strings"
+import { ParseError } from "@/util/errors"
 
 // folded vs multiline can't be inferred from context, so we have to define it
 const fieldTypes: Record<string, "multiline" | "folded"> = {
@@ -31,7 +32,7 @@ export function parseStanza(stanza: string, singleStanza: boolean = false): Reco
   }
 
   if (singleStanza && results.length > 1) {
-    throw new Error(`Expected single stanza but found ${results.length}`)
+    throw new ParseError(`Expected single stanza but found ${results.length}`)
   }
 
   return singleStanza ? results[0] ?? null : results
@@ -49,14 +50,14 @@ export function parseSingleStanza(stanza: string): Record<string, string | null>
     if (line.charCodeAt(0) === 35) continue // '#' comment
 
     if (line.length === 0) {
-      throw new Error("Unexpected blank line within stanza")
+      throw new ParseError("Unexpected blank line within stanza")
     }
 
     const firstChar = line.charCodeAt(0)
     if (firstChar === 9 || firstChar === 32) { // tab or space - this is a continuation line
       // We must know the field type to know how to handle the continuation - we can't tell folded/multiline apart otherwise
       if (!currentKey || !fieldTypes[currentKey]) {
-        throw new Error(`Continuation line on unregistered or unknown field (currentKey: ${currentKey}): ${line}`)
+        throw new ParseError(`Continuation line on unregistered or unknown field (currentKey: ${currentKey}): ${line}`)
       }
       const value = line.slice(1)
 
@@ -82,7 +83,7 @@ export function parseSingleStanza(stanza: string): Record<string, string | null>
       continue
     }
 
-    throw new Error(`Invalid line: ${line}`)
+    throw new ParseError(`Invalid line: ${line}`)
   }
 
   return hasContent ? result : null

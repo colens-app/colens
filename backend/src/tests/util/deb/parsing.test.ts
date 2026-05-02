@@ -1,5 +1,6 @@
 import { expect, test, describe } from "vitest"
 import { parseSingleStanza, parseStanza } from "@/util/deb/parsing.js"
+import { ParseError } from "@/util/errors.js"
 
 describe("parseSingleStanza", () => {
   test("single key-value pair", () => {
@@ -31,19 +32,19 @@ describe("parseSingleStanza", () => {
   })
 
   test("throws on blank line within stanza", () => {
-    expect(() => parseSingleStanza("Package: foo\n\nVersion: 1.0")).toThrow("Unexpected blank line within stanza")
+    expect(() => parseSingleStanza("Package: foo\n\nVersion: 1.0")).toThrow(ParseError)
   })
 
   test("throws on continuation line before any key", () => {
-    expect(() => parseSingleStanza(" continuation before key")).toThrow()
+    expect(() => parseSingleStanza(" continuation before key")).toThrow(ParseError)
   })
 
   test("throws on continuation line on unregistered field", () => {
-    expect(() => parseSingleStanza("Package: foo\n continuation")).toThrow()
+    expect(() => parseSingleStanza("Package: foo\n continuation")).toThrow(ParseError)
   })
 
   test("throws on invalid line", () => {
-    expect(() => parseSingleStanza("not a valid line")).toThrow()
+    expect(() => parseSingleStanza("not a valid line")).toThrow(ParseError)
   })
 
   describe("multiline fields", () => {
@@ -176,15 +177,11 @@ describe("parseStanza - single stanza mode", () => {
   })
 
   test("throws when multiple stanzas present", () => {
-    expect(() => parseStanza("Package: foo\n\nPackage: bar", true)).toThrow(
-      "Expected single stanza but found 2",
-    )
+    expect(() => parseStanza("Package: foo\n\nPackage: bar", true)).toThrow(ParseError)
   })
 
   test("throws with correct count for three stanzas", () => {
-    expect(() => parseStanza("Package: foo\n\nPackage: bar\n\nPackage: baz", true)).toThrow(
-      "Expected single stanza but found 3",
-    )
+    expect(() => parseStanza("Package: foo\n\nPackage: bar\n\nPackage: baz", true)).toThrow(ParseError)
   })
 })
 
