@@ -90,6 +90,12 @@ describe("parseSingleStanza", () => {
         depends: "libfoo (>= 1.0), libbar",
       })
     })
+
+    test("continuation lines containing colons are treated as continuation, not new fields", () => {
+      expect(parseSingleStanza("Tag: admin::boot,\n devel::lang:c")).toEqual({
+        tag: "admin::boot, devel::lang:c",
+      })
+    })
   })
 
   describe("realistic inputs", () => {

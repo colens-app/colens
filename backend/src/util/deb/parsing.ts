@@ -18,8 +18,7 @@ const fieldTypes: Record<string, "multiline" | "folded"> = {
 export function parseStanza(stanza: string, singleStanza?: false): Record<string, string | null>[]
 export function parseStanza(stanza: string, singleStanza: true): Record<string, string | null> | null
 export function parseStanza(stanza: string, singleStanza: boolean = false): Record<string, string | null>[] | Record<string, string | null> | null {
-  let trimmedStanza = stanza.startsWith("\n") ? stanza.slice(1) : stanza
-  trimmedStanza = trimmedStanza.endsWith("\n") ? trimmedStanza.slice(0, -1) : trimmedStanza
+  const trimmedStanza = stanza.trim()
 
   const stanzas = trimmedStanza.split("\n\n")
   const results: Record<string, string | null>[] = []
@@ -49,17 +48,8 @@ export function parseSingleStanza(stanza: string): Record<string, string | null>
   for (const line of lines) {
     if (line.charCodeAt(0) === 35) continue // '#' comment
 
-    if (line.length === 0) throw new Error("Unexpected blank line within stanza")
-
-    const colonIndex = line.indexOf(":")
-    if (colonIndex !== -1) {
-      const key = line.slice(0, colonIndex)
-      const value = line.slice(colonIndex + 1).trim()
-      const normalisedKey = toCamelCase(key)
-      result[normalisedKey] = value === "" ? null : value
-      currentKey = normalisedKey
-      hasContent = true
-      continue
+    if (line.length === 0) {
+      throw new Error("Unexpected blank line within stanza")
     }
 
     const firstChar = line.charCodeAt(0)
@@ -79,6 +69,17 @@ export function parseSingleStanza(stanza: string): Record<string, string | null>
         result[currentKey] = result[currentKey] ? `${result[currentKey]} ${trimmedValue}` : trimmedValue
         continue
       }
+    }
+
+    const colonIndex = line.indexOf(":")
+    if (colonIndex !== -1) {
+      const key = line.slice(0, colonIndex)
+      const value = line.slice(colonIndex + 1).trim()
+      const normalisedKey = toCamelCase(key)
+      result[normalisedKey] = value === "" ? null : value
+      currentKey = normalisedKey
+      hasContent = true
+      continue
     }
 
     throw new Error(`Invalid line: ${line}`)
