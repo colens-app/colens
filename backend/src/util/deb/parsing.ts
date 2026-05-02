@@ -1,4 +1,4 @@
-import { toCamelCase } from "@/util/strings"
+import { toCamelCaseKnown } from "@/util/strings"
 
 // folded vs multiline can't be inferred from context, so we have to define it
 const fieldTypes: Record<string, "multiline" | "folded"> = {
@@ -75,7 +75,7 @@ export function parseSingleStanza(stanza: string): Record<string, string | null>
     if (colonIndex !== -1) {
       const key = line.slice(0, colonIndex)
       const value = line.slice(colonIndex + 1).trim()
-      const normalisedKey = toCamelCase(key)
+      const normalisedKey = toCamelCaseKnown(key)
       result[normalisedKey] = value === "" ? null : value
       currentKey = normalisedKey
       hasContent = true

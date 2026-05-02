@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest"
-import { toCamelCase } from "@/util/strings.js"
+import { knownKeys, toCamelCase } from "@/util/strings.js"
 
 describe("toCamelCase", () => {
   test("handles normal cases", () => {
@@ -14,6 +14,12 @@ describe("toCamelCase", () => {
     expect(toCamelCase("Acquire-By-Hash")).toBe("acquireByHash")
     expect(toCamelCase("SHA256")).toBe("sha256")
     expect(toCamelCase("MD5Sum")).toBe("md5Sum")
+  })
+
+  test("knownKeys values match toCamelCase", () => {
+    for (const [key, expected] of Object.entries(knownKeys)) {
+      expect(toCamelCase(key), key).toBe(expected)
+    }
   })
 
   test("handles trailing separator", () => {
