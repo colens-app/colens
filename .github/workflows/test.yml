@@ -1,3 +1,5 @@
+name: Test
+
 on: [ pull_request ]
 
 permissions:
@@ -19,6 +21,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
         working-directory: ./backend
-      - name: Build backend
+      - name: Test backend
         run: pnpm run test
         working-directory: ./backend
