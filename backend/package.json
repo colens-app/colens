@@ -10,7 +10,8 @@
     "test": "vitest",
     "request-packages-file": "tsx src/scripts/requestPackagesFile.ts",
     "request-release-file": "tsx src/scripts/requestReleaseFile.ts",
-    "prisma": "prisma"
+    "prisma": "prisma",
+    "prisma:migrate": "prisma migrate dev && prisma generate && prisma db seed"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
