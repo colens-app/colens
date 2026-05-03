@@ -1,28 +1,19 @@
-/*
-  Warnings:
+-- CreateTable
+CREATE TABLE "workspaces" (
+    "id" UUID NOT NULL,
+    "name" TEXT NOT NULL,
 
-  - You are about to drop the `agent_packages` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `agent_sources` table. If the table is not empty, all the data it contains will be lost.
-  - You are about to drop the `agents` table. If the table is not empty, all the data it contains will be lost.
+    CONSTRAINT "workspaces_pkey" PRIMARY KEY ("id")
+);
 
-*/
--- DropForeignKey
-ALTER TABLE "agent_packages" DROP CONSTRAINT "agent_packages_agent_id_fkey";
+-- CreateTable
+CREATE TABLE "workspace_tokens" (
+    "id" UUID NOT NULL,
+    "token_hash" TEXT NOT NULL,
+    "workspace_id" UUID NOT NULL,
 
--- DropForeignKey
-ALTER TABLE "agent_sources" DROP CONSTRAINT "agent_sources_agent_id_fkey";
-
--- DropForeignKey
-ALTER TABLE "agents" DROP CONSTRAINT "agents_workspace_id_fkey";
-
--- DropTable
-DROP TABLE "agent_packages";
-
--- DropTable
-DROP TABLE "agent_sources";
-
--- DropTable
-DROP TABLE "agents";
+    CONSTRAINT "workspace_tokens_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "distros" (
@@ -106,7 +97,7 @@ CREATE TABLE "devices" (
     "releaseId" UUID,
     "lastSeenAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "workspace_id" TEXT NOT NULL,
+    "workspace_id" UUID NOT NULL,
 
     CONSTRAINT "devices_pkey" PRIMARY KEY ("id")
 );
@@ -156,6 +147,9 @@ CREATE UNIQUE INDEX "device_packages_deviceId_packageId_key" ON "device_packages
 
 -- CreateIndex
 CREATE INDEX "_RepositoryToRepositoryGpgKey_B_index" ON "_RepositoryToRepositoryGpgKey"("B");
+
+-- AddForeignKey
+ALTER TABLE "workspace_tokens" ADD CONSTRAINT "workspace_tokens_workspace_id_fkey" FOREIGN KEY ("workspace_id") REFERENCES "workspaces"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "distro_releases" ADD CONSTRAINT "distro_releases_distroId_fkey" FOREIGN KEY ("distroId") REFERENCES "distros"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
