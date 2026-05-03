@@ -31,7 +31,7 @@ model Distro {
   id        String   @id @db.Uuid
   name      String // "ubuntu", "debian", "alpine"
   family    String // "deb", "rpm", "apk", "pacman"
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   releases     DistroRelease[]
   repositories Repository[]
@@ -43,12 +43,12 @@ model Distro {
 
 model DistroRelease {
   id       String @id @db.Uuid
-  distroId String @db.Uuid
+  distroId String @map("distro_id") @db.Uuid
 
   version   String? // "24.04", "9" — nullable for codename-only and rolling distros
   codename  String? // "noble", "bookworm" — nullable for RPM-based and rolling distros
   slug      String // "24.04-noble", "9-stretch", "rolling" - required because Prisma doesn't support multi-column unique constraints on nullable fields
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   distro Distro @relation(fields: [distroId], references: [id])
 
@@ -61,14 +61,14 @@ model DistroRelease {
 
 model Repository {
   id        String   @id @db.Uuid
-  distroId  String   @db.Uuid
-  releaseId String?  @db.Uuid // nullable — some repos span multiple releases
+  distroId  String   @map("distro_id") @db.Uuid
+  releaseId String?  @map("release_id") @db.Uuid // nullable — some repos span multiple releases
   name      String // "ubuntu-official", "google-chrome"
-  baseUrl   String // "https://dl.google.com/linux/chrome/deb"
+  baseUrl   String   @map("base_url") // "https://dl.google.com/linux/chrome/deb"
   // Format-specific config: DEB stores suite/components, RPM stores releasever etc.
   // e.g. {"suite": "stable", "components": ["main", "contrib"]}
   config    Json     @default("{}")
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   distro  Distro         @relation(fields: [distroId], references: [id])
   release DistroRelease? @relation(fields: [releaseId], references: [id])
@@ -84,9 +84,9 @@ model Repository {
 model RepositoryGpgKey {
   id          String   @id @db.Uuid
   fingerprint String // full 40-char fingerprint — used for deduplication and identification
-  keyId       String // short ID (last 8–16 hex chars) — matches what apt/dpkg display
-  armoredKey  String // full armored public key blob — required for signature verification
-  addedAt     DateTime @default(now())
+  keyId       String   @map("key_id") // short ID (last 8–16 hex chars) — matches what apt/dpkg display
+  armoredKey  String   @map("armored_key") // full armored public key blob — required for signature verification
+  createdAt   DateTime @default(now()) @map("created_at")
 
   repository Repository[]
 
@@ -96,10 +96,10 @@ model RepositoryGpgKey {
 
 model Package {
   id          String   @id @db.Uuid
-  distroId    String   @db.Uuid
+  distroId    String   @map("distro_id") @db.Uuid
   name        String // "curl", "nginx"
   description String?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime @default(now()) @map("created_at")
 
   distro Distro @relation(fields: [distroId], references: [id])
 
@@ -113,20 +113,22 @@ model Package {
 }
 
 model PackageVersion {
-  id           String   @id @db.Uuid
-  packageId    String   @db.Uuid
-  repositoryId String   @db.Uuid
+  id           String  @id @db.Uuid
+  packageId    String  @map("package_id") @db.Uuid
+  repositoryId String  @map("repository_id") @db.Uuid
   version      String // "8.5.0-2ubuntu1"
   architecture String // "amd64", "arm64", "all"
-  filename     String? // relative path within the repo
-  sizeBytes    BigInt?
+  fileName     String? @map("file_name") // relative path within the repo
+  sizeBytes    BigInt? @map("size_bytes")
+
   // Hash value and algorithm kept separate to support SHA1 (APK legacy), SHA256, etc.
   checksum     String?
-  checksumType String?  @default("sha256") // "sha256", "sha1", "md5"
+  checksumType String? @default("sha256") @map("checksum_type") // "sha256", "sha1", "md5"
+
   // Raw dependency string — parse lazily when needed rather than modelling the graph now
-  depends      String?
-  section      String? // "utils", "net", "libs"
-  createdAt    DateTime @default(now())
+  depends   String?
+  section   String? // "utils", "net", "libs"
+  createdAt DateTime @default(now()) @map("created_at")
 
   package    Package    @relation(fields: [packageId], references: [id])
   repository Repository @relation(fields: [repositoryId], references: [id])
@@ -139,13 +141,14 @@ model PackageVersion {
 }
 
 model Device {
-  id          String    @id @db.Uuid
-  hostname    String
-  releaseId   String?   @db.Uuid // which distro release this device is running
-  lastSeenAt  DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  workspaceId String    @map("workspace_id") @db.Uuid
+  id             String    @id @db.Uuid
+  hostname       String
+  releaseId      String?   @map("release_id") @db.Uuid // which distro release this device is running
+  lastSeenAt     DateTime? @map("last_seen_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  workspaceId    String    @map("workspace_id") @db.Uuid
+  agentTokenHash String    @map("agent_token_hash")
 
   release   DistroRelease? @relation(fields: [releaseId], references: [id])
   workspace Workspace      @relation(fields: [workspaceId], references: [id])
@@ -160,14 +163,14 @@ model Device {
 
 model DevicePackage {
   id               String    @id @db.Uuid
-  deviceId         String    @db.Uuid
-  packageId        String    @db.Uuid
-  installedVersion String // plain text — may not match any PackageVersion row
-  packageVersionId String?   @db.Uuid // set when the installed version is in a tracked repo
-  sourceRepoId     String?   @db.Uuid // where it was installed from
-  installedAt      DateTime?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  deviceId         String    @map("device_id") @db.Uuid
+  packageId        String    @map("package_id") @db.Uuid
+  installedVersion String    @map("installed_version") // plain text — may not match any PackageVersion row
+  packageVersionId String?   @map("package_version_id") @db.Uuid // set when the installed version is in a tracked repo
+  sourceRepoId     String?   @map("source_repo_id") @db.Uuid // where it was installed from
+  installedAt      DateTime? @map("installed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
 
   device         Device          @relation(fields: [deviceId], references: [id])
   package        Package         @relation(fields: [packageId], references: [id])
