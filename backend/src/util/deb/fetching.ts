@@ -3,11 +3,10 @@ import { packageSchema, releaseFileSchema, type PackagesFile, type ReleaseFile }
 import { parseStanza } from "@/util/deb/parsing.js"
 import { gunzipBuffer } from "@/util/compression.js"
 
-export async function fetchReleaseFile(repositoryUrl: string, distribution: string): Promise<ReleaseFile> {
+export async function fetchReleaseFile(repositoryUrl: string): Promise<ReleaseFile> {
   const normalisedUrl = stripTrailingSlash(repositoryUrl)
   // TODO: handle gpg, maybe use InRelease instead of Release?
-  // TODO: validate distribution to not be a path traversal - either upstream or here
-  const indexUrl = `${normalisedUrl}/dists/${distribution}/Release`
+  const indexUrl = `${normalisedUrl}/Release`
   const response = await fetch(indexUrl)
   if (!response.ok) {
     throw new Error(`Failed to fetch repository index: ${response.status} ${response.statusText}`)
@@ -24,10 +23,10 @@ export async function fetchReleaseFile(repositoryUrl: string, distribution: stri
   return parseResult
 }
 
-export async function fetchPackagesFile(repositoryUrl: string, distribution: string, component: string, arch: string): Promise<PackagesFile> {
+export async function fetchPackagesFile(repositoryUrl: string, component: string, arch: string): Promise<PackagesFile> {
   const normalisedUrl = stripTrailingSlash(repositoryUrl)
 
-  const packagesUrl = `${normalisedUrl}/dists/${distribution}/${component}/binary-${arch}/Packages.gz`
+  const packagesUrl = `${normalisedUrl}/${component}/binary-${arch}/Packages.gz`
   const response = await fetch(packagesUrl)
 
   if (!response.ok && response.status === 404) {

@@ -1,0 +1,6 @@
+- [ ] Consider how GPG keys are handled - do we upload them? will agents upload them and we verify?
+- [ ] Consider how repositories are handled
+  - We don't want to expose private repositories
+  - We want to deduplicate repositories by URL so we're not recording many copies of the same repository
+  - We want to deduplicate regional mirrors of repositories
+  - We want some repositories to be global (e.g. the main Ubuntu archive) and some to be per-agent/workspace (e.g. a private repository of packages)
