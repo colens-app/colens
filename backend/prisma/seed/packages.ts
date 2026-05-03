@@ -18,9 +18,9 @@ export async function seedUbuntuRepositories(prisma: PrismaClient) {
       console.log(`Skipping release without codename: ${release.version}`)
       continue
     }
-    const suites = generateUbuntuSuites(release.codename)
-    for (const suite of suites) {
-      const url = `http://archive.ubuntu.com/ubuntu/dists/${suite}`
+    const distributions = generateUbuntuSuites(release.codename)
+    for (const distribution of distributions) {
+      const url = `http://archive.ubuntu.com/ubuntu/dists/${distribution}`
       const existing = await prisma.repository.findFirst({ where: { baseUrl: url } })
       if (existing) {
         console.log(`Repository already exists: ${url}`)
@@ -35,14 +35,17 @@ export async function seedUbuntuRepositories(prisma: PrismaClient) {
           distroId: release.distroId,
           releaseId: release.id,
           baseUrl: url,
-          name: `Ubuntu ${release.version} (${suite})`,
+          name: `Ubuntu ${release.version} (${distribution})`,
           config: {
+            distribution: distribution,
+            suite: releaseFile.suite,
+            codename: releaseFile.codename,
             components: releaseFile.components,
             architectures: releaseFile.architectures,
           },
         },
       })
-      console.log(`Created repository for release: ${release.slug} (${suite})`)
+      console.log(`Created repository for release: ${release.slug} (${distribution})`)
     }
   }
 }

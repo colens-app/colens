@@ -8,7 +8,7 @@ intro("Request Release File")
 const repositoryUrl = await select({
   message: "Repository URL",
   options: [
-    { value: "https://deb.debian.org/debian/", label: "Debian" },
+    { value: "http://deb.debian.org/debian", label: "Debian" },
     { value: "http://archive.ubuntu.com/ubuntu", label: "Ubuntu" },
   ],
 })
@@ -18,31 +18,31 @@ if (isCancel(repositoryUrl)) {
   process.exit(1)
 }
 
-const releases = {
-  "https://deb.debian.org/debian/": generateDebianSuites(["trixie", "bookworm", "bullseye"]),
+const distributions = {
+  "http://deb.debian.org/debian": generateDebianSuites(["trixie", "bookworm", "bullseye"]),
   "http://archive.ubuntu.com/ubuntu": generateUbuntuSuites(["resolute", "questing", "noble", "jammy"]),
 }
 
-const release = await select({
-  message: "Release",
-  options: releases[repositoryUrl].map(value => ({ value, label: value })),
+const distribution = await select({
+  message: "Distribution",
+  options: distributions[repositoryUrl].map(value => ({ value, label: value })),
 })
 
-if (isCancel(release)) {
-  log.error("No release selected, exiting.")
+if (isCancel(distribution)) {
+  log.error("No distribution selected, exiting.")
   process.exit(1)
 }
 
 log.info(`Selected repository: ${repositoryUrl}`)
-log.info(`Selected release: ${release}`)
+log.info(`Selected distribution: ${distribution}`)
 
 await tasks([
   {
     title: "Fetching release file...",
     task: async () => {
-      const releaseFile = await fetchReleaseFile(`${repositoryUrl}/dists/${release}`)
+      const releaseFile = await fetchReleaseFile(`${repositoryUrl}/dists/${distribution}`)
       const hostName = new URL(repositoryUrl).host
-      const fileName = `${hostName}-${release}-Release.json`
+      const fileName = `${hostName}-${distribution}-Release.json`
       await writeFile(`${import.meta.dirname}/${fileName}`, JSON.stringify(releaseFile, null, 2))
       return `Saved to ${fileName}`
     },

@@ -8,7 +8,7 @@ intro("Request Release File")
 const repositoryUrl = await select({
   message: "Repository URL",
   options: [
-    { value: "https://deb.debian.org/debian/", label: "Debian" },
+    { value: "http://deb.debian.org/debian", label: "Debian" },
     { value: "http://archive.ubuntu.com/ubuntu", label: "Ubuntu" },
   ],
 })
@@ -18,28 +18,28 @@ if (isCancel(repositoryUrl)) {
   process.exit(1)
 }
 
-const releases = {
-  "https://deb.debian.org/debian/": generateDebianSuites(["trixie", "bookworm", "bullseye"]),
+const distributions = {
+  "http://deb.debian.org/debian": generateDebianSuites(["trixie", "bookworm", "bullseye"]),
   "http://archive.ubuntu.com/ubuntu": generateUbuntuSuites(["resolute", "questing", "noble", "jammy"]),
 }
 
-const release = await select({
-  message: "Release",
-  options: releases[repositoryUrl].map(value => ({ value, label: value })),
+const distribution = await select({
+  message: "Distribution",
+  options: distributions[repositoryUrl].map(value => ({ value, label: value })),
 })
 
-if (isCancel(release)) {
-  log.error("No release selected, exiting.")
+if (isCancel(distribution)) {
+  log.error("No distribution selected, exiting.")
   process.exit(1)
 }
 
 log.info(`Selected repository: ${repositoryUrl}`)
-log.info(`Selected release: ${release}`)
+log.info(`Selected distribution: ${distribution}`)
 
 const releaseSpinner = spinner()
 
 releaseSpinner.start("Fetching release file...")
-const releaseFile = await fetchReleaseFile(`${repositoryUrl}/dists/${release}`)
+const releaseFile = await fetchReleaseFile(`${repositoryUrl}/dists/${distribution}`)
 releaseSpinner.stop("Release file fetched!")
 
 const components = await multiselect({
@@ -69,9 +69,9 @@ await tasks(
     architectures.map(arch => ({
       title: `Fetching packages for ${component} (${arch})...`,
       task: async () => {
-        const packages = await fetchPackagesFile(`${repositoryUrl}/dists/${release}`, component, arch)
+        const packages = await fetchPackagesFile(`${repositoryUrl}/dists/${distribution}`, component, arch)
         const hostName = new URL(repositoryUrl).host
-        const fileName = `${hostName}-${release}-${component}-${arch}-Packages.json`
+        const fileName = `${hostName}-${distribution}-${component}-${arch}-Packages.json`
         await writeFile(`${import.meta.dirname}/${fileName}`, JSON.stringify(packages, null, 2))
         totalPackages += packages.length
         return `Saved to ${fileName} - ${packages.length} packages fetched`
