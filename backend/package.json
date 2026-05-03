@@ -9,7 +9,8 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest",
     "request-packages-file": "tsx src/scripts/requestPackagesFile.ts",
-    "request-release-file": "tsx src/scripts/requestReleaseFile.ts"
+    "request-release-file": "tsx src/scripts/requestReleaseFile.ts",
+    "prisma": "prisma"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",

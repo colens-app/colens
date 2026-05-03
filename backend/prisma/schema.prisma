@@ -1,73 +1,171 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
 
-model Workspaces {
-  id   String @id @default(uuid())
+datasource db {
+  provider = "postgresql"
+}
+
+model Workspace {
+  id   String @id
   name String
 
-  agents          Agents[]
-  workspaceTokens WorkspaceTokens[]
+  devices         Device[]
+  workspaceTokens WorkspaceToken[]
 
   @@map("workspaces")
 }
 
-model WorkspaceTokens {
+model WorkspaceToken {
   id        String @id @default(uuid())
   tokenHash String @map("token_hash")
 
-  workspaceId String     @map("workspace_id")
-  workspace   Workspaces @relation(fields: [workspaceId], references: [id])
+  workspaceId String    @map("workspace_id")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
   @@map("workspace_tokens")
 }
 
-model Agents {
-  id        String @id @default(uuid())
-  name      String
-  tokenHash String @map("taken_hash")
+model Distro {
+  id        String   @id @db.Uuid
+  name      String // "ubuntu", "debian", "alpine"
+  family    String // "deb", "rpm", "apk", "pacman"
+  createdAt DateTime @default(now())
 
-  workspaceId String     @map("workspace_id")
-  workspace   Workspaces @relation(fields: [workspaceId], references: [id])
+  releases     DistroRelease[]
+  repositories Repository[]
+  packages     Package[]
 
-  packages AgentPackages[]
-  sources  AgentSources[]
-
-  @@map("agents")
+  @@unique([name, family])
+  @@map("distros")
 }
 
-model AgentPackages {
-  id String @id @default(uuid())
+model DistroRelease {
+  id        String   @id @db.Uuid
+  distroId  String   @db.Uuid
+  version   String? // "24.04", "9" — nullable for codename-only and rolling distros
+  codename  String? // "noble", "bookworm" — nullable for RPM-based and rolling distros
+  slug      String // "24.04-noble", "9-stretch", "rolling" - required because Prisma doesn't support multi-column unique constraints on nullable fields
+  createdAt DateTime @default(now())
 
-  name    String
-  version String
-  arch    String // and64 vs arm64, etc...
+  distro Distro @relation(fields: [distroId], references: [id])
 
-  agentId String @map("agent_id")
-  agent   Agents @relation(fields: [agentId], references: [id])
+  repositories Repository[]
+  devices      Device[]
 
-  @@unique([name, arch, agentId])
-  @@map("agent_packages")
+  @@unique([distroId, slug])
+  @@map("distro_releases")
 }
 
-model AgentSources {
-  id String @id @default(uuid())
+model Repository {
+  id        String   @id @db.Uuid
+  distroId  String   @db.Uuid
+  releaseId String?  @db.Uuid // nullable — some repos span multiple releases
+  name      String // "ubuntu-official", "google-chrome"
+  baseUrl   String // "https://dl.google.com/linux/chrome/deb"
+  // Format-specific config: DEB stores suite/components, RPM stores releasever etc.
+  // e.g. {"suite": "stable", "components": ["main", "contrib"]}
+  config    Json     @default("{}")
+  createdAt DateTime @default(now())
 
-  source String
-  cert   String?
+  distro  Distro         @relation(fields: [distroId], references: [id])
+  release DistroRelease? @relation(fields: [releaseId], references: [id])
 
-  agentId String @map("agent_id")
-  agent   Agents @relation(fields: [agentId], references: [id])
+  gpgKeys         RepositoryGpgKey[]
+  packageVersions PackageVersion[]
+  devicePackages  DevicePackage[]
 
-  @@map("agent_sources")
+  @@map("repositories")
 }
 
-datasource db {
-  provider = "postgresql"
+// GPG keys for verifying repository metadata and packages. Stored as a separate table to allow GPG key rotation and reuse across multiple repos without duplication.
+model RepositoryGpgKey {
+  id          String   @id @db.Uuid
+  fingerprint String // full 40-char fingerprint — used for deduplication and identification
+  keyId       String // short ID (last 8–16 hex chars) — matches what apt/dpkg display
+  armoredKey  String // full armored public key blob — required for signature verification
+  addedAt     DateTime @default(now())
+
+  repository Repository[]
+
+  @@unique([fingerprint])
+  @@map("repository_gpg_keys")
+}
+
+model Package {
+  id          String   @id @db.Uuid
+  distroId    String   @db.Uuid
+  name        String // "curl", "nginx"
+  description String?
+  createdAt   DateTime @default(now())
+
+  distro Distro @relation(fields: [distroId], references: [id])
+
+  versions       PackageVersion[]
+  devicePackages DevicePackage[]
+
+  @@unique([distroId, name])
+  @@index([name])
+  @@map("packages")
+}
+
+model PackageVersion {
+  id           String   @id @db.Uuid
+  packageId    String   @db.Uuid
+  repositoryId String   @db.Uuid
+  version      String // "8.5.0-2ubuntu1"
+  architecture String // "amd64", "arm64", "all"
+  filename     String? // relative path within the repo
+  sizeBytes    BigInt?
+  // Hash value and algorithm kept separate to support SHA1 (APK legacy), SHA256, etc.
+  checksum     String?
+  checksumType String?  @default("sha256") // "sha256", "sha1", "md5"
+  // Raw dependency string — parse lazily when needed rather than modelling the graph now
+  depends      String?
+  section      String? // "utils", "net", "libs"
+  createdAt    DateTime @default(now())
+
+  package    Package    @relation(fields: [packageId], references: [id])
+  repository Repository @relation(fields: [repositoryId], references: [id])
+
+  devicePackages DevicePackage[]
+
+  @@unique([packageId, repositoryId, version, architecture])
+  @@map("package_versions")
+}
+
+model Device {
+  id          String    @id @db.Uuid
+  hostname    String
+  releaseId   String?   @db.Uuid // which distro release this device is running
+  lastSeenAt  DateTime?
+  createdAt   DateTime  @default(now())
+  workspaceId String    @map("workspace_id")
+
+  release   DistroRelease? @relation(fields: [releaseId], references: [id])
+  workspace Workspace      @relation(fields: [workspaceId], references: [id])
+
+  devicePackages DevicePackage[]
+
+  @@map("devices")
+}
+
+model DevicePackage {
+  id               String    @id @db.Uuid
+  deviceId         String    @db.Uuid
+  packageId        String    @db.Uuid
+  installedVersion String // plain text — may not match any PackageVersion row
+  packageVersionId String?   @db.Uuid // set when the installed version is in a tracked repo
+  sourceRepoId     String?   @db.Uuid // where it was installed from
+  installedAt      DateTime?
+  createdAt        DateTime  @default(now())
+
+  device         Device          @relation(fields: [deviceId], references: [id])
+  package        Package         @relation(fields: [packageId], references: [id])
+  packageVersion PackageVersion? @relation(fields: [packageVersionId], references: [id])
+  sourceRepo     Repository?     @relation(fields: [sourceRepoId], references: [id])
+
+  @@unique([deviceId, packageId])
+  @@map("device_packages")
 }
