@@ -6,5 +6,6 @@
         {
             "directory": "./backend"
         }
-    ]
+    ],
+    "js/ts.preferences.importModuleSpecifier": "non-relative"
 }
