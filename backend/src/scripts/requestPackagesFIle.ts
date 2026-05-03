@@ -1,4 +1,5 @@
 import { fetchPackagesFile, fetchReleaseFile } from "@/util/deb/fetching"
+import { generateDebianSuites, generateUbuntuSuites } from "@/util/deb/suites"
 import { isCancel, select, log, tasks, intro, spinner, multiselect } from "@clack/prompts"
 import { writeFile } from "fs/promises"
 
@@ -18,8 +19,8 @@ if (isCancel(repositoryUrl)) {
 }
 
 const releases = {
-  "https://deb.debian.org/debian/": ["trixie", "bookworm", "bullseye"],
-  "http://archive.ubuntu.com/ubuntu": ["resolute", "questing", "noble", "jammy"],
+  "https://deb.debian.org/debian/": generateDebianSuites(["trixie", "bookworm", "bullseye"]),
+  "http://archive.ubuntu.com/ubuntu": generateUbuntuSuites(["resolute", "questing", "noble", "jammy"]),
 }
 
 const release = await select({
@@ -38,7 +39,7 @@ log.info(`Selected release: ${release}`)
 const releaseSpinner = spinner()
 
 releaseSpinner.start("Fetching release file...")
-const releaseFile = await fetchReleaseFile(repositoryUrl, release)
+const releaseFile = await fetchReleaseFile(`${repositoryUrl}/dists/${release}`)
 releaseSpinner.stop("Release file fetched!")
 
 const components = await multiselect({
@@ -68,7 +69,7 @@ await tasks(
     architectures.map(arch => ({
       title: `Fetching packages for ${component} (${arch})...`,
       task: async () => {
-        const packages = await fetchPackagesFile(repositoryUrl, release, component, arch)
+        const packages = await fetchPackagesFile(`${repositoryUrl}/dists/${release}`, component, arch)
         const hostName = new URL(repositoryUrl).host
         const fileName = `${hostName}-${release}-${component}-${arch}-Packages.json`
         await writeFile(`${import.meta.dirname}/${fileName}`, JSON.stringify(packages, null, 2))

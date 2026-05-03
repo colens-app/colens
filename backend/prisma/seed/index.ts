@@ -2,7 +2,8 @@ import "dotenv/config"
 import { Pool } from "pg"
 import { PrismaPg } from "@prisma/adapter-pg"
 import { PrismaClient } from "../../src/generated/prisma/client"
-import { seedUbuntuReleases, seedDistros, seedDebianReleases } from "./packages"
+import { seedUbuntuReleases, seedDistros, seedDebianReleases } from "./distros"
+import { seedUbuntuRepositories } from "./packages"
 
 const connectionString = `${process.env.DATABASE_URL}`
 const pool = new Pool({ connectionString })
@@ -13,6 +14,7 @@ async function main() {
   await seedDistros(prisma)
   await seedUbuntuReleases(prisma)
   await seedDebianReleases(prisma)
+  await seedUbuntuRepositories(prisma)
 }
 
 await prisma.$connect()

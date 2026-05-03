@@ -1,4 +1,5 @@
 import { fetchReleaseFile } from "@/util/deb/fetching"
+import { generateDebianSuites, generateUbuntuSuites } from "@/util/deb/suites"
 import { isCancel, select, log, tasks, intro } from "@clack/prompts"
 import { writeFile } from "fs/promises"
 
@@ -18,8 +19,8 @@ if (isCancel(repositoryUrl)) {
 }
 
 const releases = {
-  "https://deb.debian.org/debian/": ["trixie", "bookworm", "bullseye"],
-  "http://archive.ubuntu.com/ubuntu": ["resolute", "questing", "noble", "jammy"],
+  "https://deb.debian.org/debian/": generateDebianSuites(["trixie", "bookworm", "bullseye"]),
+  "http://archive.ubuntu.com/ubuntu": generateUbuntuSuites(["resolute", "questing", "noble", "jammy"]),
 }
 
 const release = await select({
@@ -39,7 +40,7 @@ await tasks([
   {
     title: "Fetching release file...",
     task: async () => {
-      const releaseFile = await fetchReleaseFile(repositoryUrl, release)
+      const releaseFile = await fetchReleaseFile(`${repositoryUrl}/dists/${release}`)
       const hostName = new URL(repositoryUrl).host
       const fileName = `${hostName}-${release}-Release.json`
       await writeFile(`${import.meta.dirname}/${fileName}`, JSON.stringify(releaseFile, null, 2))
