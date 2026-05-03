@@ -7,7 +7,9 @@
     "start": "node dist/index.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest"
+    "test": "vitest",
+    "request-packages-file": "tsx src/scripts/requestPackagesFile.ts",
+    "request-release-file": "tsx src/scripts/requestReleaseFile.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.19.14",
