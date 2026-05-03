@@ -107,6 +107,7 @@ model Package {
 
   @@unique([distroId, name])
   @@index([name])
+  @@index([createdAt])
   @@map("packages")
 }
 
@@ -132,6 +133,7 @@ model PackageVersion {
   devicePackages DevicePackage[]
 
   @@unique([packageId, repositoryId, version, architecture])
+  @@index([createdAt])
   @@map("package_versions")
 }
 
@@ -141,6 +143,7 @@ model Device {
   releaseId   String?   @db.Uuid // which distro release this device is running
   lastSeenAt  DateTime?
   createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   workspaceId String    @map("workspace_id") @db.Uuid
 
   release   DistroRelease? @relation(fields: [releaseId], references: [id])
@@ -148,6 +151,9 @@ model Device {
 
   devicePackages DevicePackage[]
 
+  @@index([hostname])
+  @@index([createdAt])
+  @@index([updatedAt])
   @@map("devices")
 }
 
@@ -160,6 +166,7 @@ model DevicePackage {
   sourceRepoId     String?   @db.Uuid // where it was installed from
   installedAt      DateTime?
   createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   device         Device          @relation(fields: [deviceId], references: [id])
   package        Package         @relation(fields: [packageId], references: [id])
@@ -167,5 +174,7 @@ model DevicePackage {
   sourceRepo     Repository?     @relation(fields: [sourceRepoId], references: [id])
 
   @@unique([deviceId, packageId])
+  @@index([createdAt])
+  @@index([updatedAt])
   @@map("device_packages")
 }
