@@ -42,8 +42,9 @@ model Distro {
 }
 
 model DistroRelease {
-  id        String   @id @db.Uuid
-  distroId  String   @db.Uuid
+  id       String @id @db.Uuid
+  distroId String @db.Uuid
+
   version   String? // "24.04", "9" — nullable for codename-only and rolling distros
   codename  String? // "noble", "bookworm" — nullable for RPM-based and rolling distros
   slug      String // "24.04-noble", "9-stretch", "rolling" - required because Prisma doesn't support multi-column unique constraints on nullable fields
